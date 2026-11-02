@@ -15,19 +15,59 @@
 {{ wtf.quick_form(form) }}
 
 <h2>Relação de usuários cadastrados</h2>
-</br>
+<br>
 
 <table class="table">
     <tr>
         <th>Nome do usuário</th>
         <th>Função</th>
+        <th>Ações</th>
     </tr>
     {% for pessoa in pessoas %}
-    <tr>
-        <td>{{ pessoa.username }}</td>
-        <td>{{ pessoa.role.name }}</td>
+    <tr id="row-{{ pessoa.id }}">
+        <!-- Nome: visualização -->
+        <td class="view-mode">{{ pessoa.username }}</td>
+
+        <!-- Nome: edição (escondido) -->
+        <td class="edit-mode" style="display:none;">
+            <form id="edit-form-{{ pessoa.id }}"
+                  action="{{ url_for('main.edit_user', id=pessoa.id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="username" value="{{ pessoa.username }}"
+                       class="form-control input-sm" required>
+            </form>
+        </td>
+
+        <td>{{ pessoa.role.name if pessoa.role else '' }}</td>
+
+        <td>
+            <span class="view-mode">
+                <button type="button" class="btn btn-default btn-xs"
+                        onclick="toggleEdit({{ pessoa.id }}, true)">Editar</button>
+                <form action="{{ url_for('main.delete_user', id=pessoa.id) }}"
+                      method="post" style="display:inline;"
+                      onsubmit="return confirm('Apagar {{ pessoa.username }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-xs">Apagar</button>
+                </form>
+            </span>
+
+            <span class="edit-mode" style="display:none;">
+                <button type="submit" form="edit-form-{{ pessoa.id }}"
+                        class="btn btn-success btn-xs">Salvar</button>
+                <button type="button" class="btn btn-default btn-xs"
+                        onclick="toggleEdit({{ pessoa.id }}, false)">Cancelar</button>
+            </span>
+        </td>
     </tr>
     {% endfor %}
 </table>
 
+<script>
+function toggleEdit(id, editing) {
+    const row = document.getElementById('row-' + id);
+    row.querySelectorAll('.view-mode').forEach(el => el.style.display = editing ? 'none' : '');
+    row.querySelectorAll('.edit-mode').forEach(el => el.style.display = editing ? '' : 'none');
+}
+</script>
 {% endblock %}
